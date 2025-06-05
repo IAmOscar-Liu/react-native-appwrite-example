@@ -1,29 +1,44 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import AppwriteProvider, { useAppwrite } from "@/context/AppwriteProvider";
+import { Slot, useRouter, useSegments } from "expo-router";
+import { useEffect } from "react";
+import { ActivityIndicator, LogBox, View } from "react-native";
+import "../app/global.css";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+LogBox.ignoreLogs(["User (role: guests) missing scope (account)"]);
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AppwriteProvider>
+      <InitialLayout />
+    </AppwriteProvider>
   );
+}
+
+function InitialLayout() {
+  const { isLoading, isAuthenticated } = useAppwrite();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inPrivateGroup = segments[0] === "(private)";
+
+    if (isAuthenticated && !inPrivateGroup) {
+      console.log("logged in and redirecting to home");
+      router.replace("/home");
+    } else if (!isAuthenticated) {
+      console.log("logged out and redirecting to sign-in");
+      router.replace("/sign-in");
+    }
+  }, [isLoading, isAuthenticated]);
+
+  if (isLoading)
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+
+  return <Slot />;
 }
