@@ -1,10 +1,4 @@
-import {
-  login as appwriteLogin,
-  loginWithOAuth as appwriteLoginWithOAuth,
-  logout as appwriteLogout,
-  register as appwriteRegister,
-  getCurrentUser,
-} from "@/lib/appwrite";
+import * as appwrite from "@/lib/appwrite";
 import {
   createContext,
   ReactNode,
@@ -44,7 +38,7 @@ const AppwriteProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     setIsLoading(true);
     const fetchUser = async () => {
-      const user = await getCurrentUser();
+      const user = await appwrite.getCurrentUser();
       setUser(user);
       setIsAuthenticated(!!user);
       setIsLoading(false);
@@ -53,41 +47,41 @@ const AppwriteProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const loginWithOAuth = async (provider: OAuthProvider) => {
-    const result = await appwriteLoginWithOAuth(provider);
+    const result = await appwrite.loginWithOAuth(provider);
     if (!result.success) {
       throw new Error(result.error);
     }
-    const user = await getCurrentUser();
+    const user = await appwrite.getCurrentUser();
     setUser(user);
     setIsAuthenticated(!!user);
   };
 
   const login = async (email: string, password: string) => {
-    const result = await appwriteLogin(email, password);
+    const result = await appwrite.login(email, password);
     if (!result.success) {
       throw new Error(result.error);
     }
-    const user = await getCurrentUser();
+    const user = await appwrite.getCurrentUser();
     setUser(user);
     setIsAuthenticated(!!user);
   };
 
   const register = async (email: string, password: string, name: string) => {
-    const result = await appwriteRegister(email, password, name);
+    const result = await appwrite.register(email, password, name);
     if (!result.success) {
       throw new Error(result.error);
     }
-    const loginResult = await appwriteLogin(email, password);
+    const loginResult = await appwrite.login(email, password);
     if (!loginResult.success) {
       throw new Error(loginResult.error);
     }
-    const user = await getCurrentUser();
+    const user = await appwrite.getCurrentUser();
     setUser(user);
     setIsAuthenticated(!!user);
   };
 
   const logout = async () => {
-    const result = await appwriteLogout();
+    const result = await appwrite.logout();
     if (!result.success) {
       throw new Error(result.error);
     }
